@@ -36,7 +36,7 @@
       <div class="card-body" style="padding:12px;">
         <div class="video-area" style="position:relative;">
           <!-- live MJPEG stream served by backend -->
-          <img id="videoStream" src="{{ url_for('ml.stream') }}" alt="Live Feed" style="width:100%;height:100%;object-fit:cover;display:none;">
+          <img id="videoStream" src="" alt="Live Feed" style="width:100%;height:100%;object-fit:cover;display:none;">
           <video id="browserCamera" class="browser-camera" playsinline muted autoplay></video>
           <div class="video-label" id="videoLiveLabel"><span class="live-blink"></span>LIVE</div>
           <div class="video-placeholder" id="videoPlaceholder">
@@ -116,6 +116,7 @@
 
 {% block extra_js %}
 <script>
+const ML_BACKEND_URL = "{{ ml_backend_url }}";
 const HAS_BACKEND_CAMERA = {{ 'true' if ml_camera_backend_available else 'false' }};
 let currentCamEnabled = false;
 let browserCameraStream = null;
@@ -246,17 +247,23 @@ function fetchML() {
     if (local) updateMLDisplay(local);
     return;
   }
-  fetch('/api/ml/detection').then(r=>r.json()).then(updateMLDisplay).catch(e=>console.error('ML fetch error',e));
+  const base = ML_BACKEND_URL || '';
+  fetch(base + '/api/ml/detection').then(r=>r.json()).then(updateMLDisplay).catch(e=>console.error('ML fetch error',e));
 }
+const streamImgEl = document.getElementById('videoStream');
+if (HAS_BACKEND_CAMERA) {
+  streamImgEl.src = (ML_BACKEND_URL || '') + '/ml/stream';
+  streamImgEl.addEventListener('load', () =>{
+    document.getElementById('videoPlaceholder').style.display='none';
+    streamImgEl.style.display='block';
+  });
+  streamImgEl.addEventListener('error', () => {
+    console.error('Failed to load backend MJPEG stream', streamImgEl.src);
+  });
+}
+
 fetchML();
 setInterval(fetchML, 500);
-
-// show video placeholder until backend stream loads
-const streamImgEl = document.getElementById('videoStream');
-streamImgEl.addEventListener('load', ()=>{
-  document.getElementById('videoPlaceholder').style.display='none';
-  streamImgEl.style.display='block';
-});
 
 // update UI and state
 async function setCamState(enabled) {
@@ -340,7 +347,8 @@ document.getElementById('camToggleBtn').addEventListener('click', async ()=>{
       return;
     }
 
-    const res = await fetch('/ml/camera/toggle', {
+    const apiBase = ML_BACKEND_URL || '';
+    const res = await fetch(apiBase + '/ml/camera/toggle', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({enabled: desired})
@@ -350,8 +358,9 @@ document.getElementById('camToggleBtn').addEventListener('click', async ()=>{
   } catch (e) { console.error('toggle error', e); }
 });
 
+const apiBase = ML_BACKEND_URL || '';
 if (HAS_BACKEND_CAMERA) {
-  fetch('/ml/camera/status').then(r=>r.json()).then(j=>{
+  fetch(apiBase + '/ml/camera/status').then(r=>r.json()).then(j=>{
     if (j.enabled !== undefined) setCamState(j.enabled);
   }).catch(()=>{});
 } else {

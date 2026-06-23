@@ -235,9 +235,10 @@ function updateDetection(data) {
 document.addEventListener('DOMContentLoaded', () => {
   initDetectionChart();
 
+  const apiBase = "{{ ml_backend_url }}" || '';
   const poll = async () => {
     try {
-      const res = await fetch('/api/ml/detection');
+      const res = await fetch(apiBase + '/api/ml/detection');
       const data = await res.json();
       updateDetection(data);
     } catch (e) {}

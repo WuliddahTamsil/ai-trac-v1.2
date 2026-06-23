@@ -4,6 +4,16 @@ import math
 import os
 import time
 
+
+def _quality_grade(score):
+    if score >= 85:
+        return 'Excellent'
+    if score >= 70:
+        return 'Good'
+    if score >= 55:
+        return 'Fair'
+    return 'Poor'
+
 api_bp = Blueprint('api', __name__)
 
 def gen_battery():
@@ -91,8 +101,12 @@ def ml_detection():
         info['quality_score'] = float(info.get('quality_score', 0.0))
         info['avg_quality'] = float(info.get('avg_quality', 0.0))
         info['total_detections'] = int(info.get('total_detections', 0))
-        # if bbox missing ensure default
         info.setdefault('bbox', {'x':0,'y':0,'w':0,'h':0})
+        # compatibility fields for older ML monitor page
+        info['condition'] = info.get('label', '--')
+        info['detections_count'] = info['total_detections']
+        info['quality'] = _quality_grade(info['quality_score'])
+        info['timestamp'] = time.strftime('%H:%M:%S')
         return jsonify(info)
     except Exception as e:
         # fallback demo data for serverless deployments without camera/model access
@@ -100,11 +114,15 @@ def ml_detection():
         label = random.choices(labels, weights=[0.45, 0.25, 0.20, 0.10])[0]
         confidence = round(random.uniform(0.72, 0.96), 3)
         quality = round(random.uniform(68, 94), 1)
+        quality_grade = _quality_grade(quality)
         return jsonify({
             'label': label,
+            'condition': label,
             'confidence': confidence,
             'quality_score': quality,
+            'quality': quality_grade,
             'total_detections': random.randint(1, 6),
+            'detections_count': random.randint(1, 6),
             'avg_quality': quality,
             'bbox': {
                 'x': random.randint(80, 320),
@@ -112,6 +130,7 @@ def ml_detection():
                 'w': random.randint(120, 220),
                 'h': random.randint(90, 180)
             },
+            'timestamp': time.strftime('%H:%M:%S'),
             'demo': True,
             'detail': str(e)
         })

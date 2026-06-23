@@ -54,7 +54,7 @@ def is_capture_enabled():
 # helper functions
 
 def analyze_results(results, frame_shape):
-    """Simple analysis of YOLO results to produce quality metrics."""
+    """Analyze YOLO results and produce quality metrics."""
     h, w = frame_shape[:2]
     info = {
         'label': '--',
@@ -71,20 +71,16 @@ def analyze_results(results, frame_shape):
     confidences = boxes.conf.cpu().numpy()
     info['total_detections'] = len(boxes)
     info['avg_quality'] = round(float(confidences.mean()) * 100, 1)
-    # choose highest confidence box for label & bbox
     idx = int(confidences.argmax())
     cls_idx = int(boxes.cls[idx])
-    # names mapping (ultralytics stores results.names)
     info['label'] = results.names.get(cls_idx, str(cls_idx))
     info['confidence'] = float(confidences[idx])
 
-    # compute coverage area percentage
     areas = []
     for i in range(len(boxes)):
         x1, y1, x2, y2 = boxes.xyxy[i]
         areas.append((x2 - x1) * (y2 - y1))
     coverage = sum(areas) / (w * h) * 100
-    # uniformity: penalty when box areas vary a lot
     try:
         import numpy as _np
         arr = _np.array(areas)
@@ -93,10 +89,8 @@ def analyze_results(results, frame_shape):
         uniformity = 100.0
     info['coverage'] = float(coverage)
     info['uniformity'] = float(uniformity)
-    # simple quality metric combining coverage & uniformity
     info['quality_score'] = float(min(100.0, coverage * 0.6 + uniformity * 0.4))
 
-    # bounding box of chosen index
     x1, y1, x2, y2 = boxes.xyxy[idx]
     info['bbox'] = {
         'x': int(x1),

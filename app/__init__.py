@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_cors import CORS
 from .blueprints.main import main_bp
 from .blueprints.dashboard import dashboard_bp
 from .blueprints.control import control_bp
@@ -14,6 +15,7 @@ from .blueprints.api import api_bp
 def create_app():
     app = Flask(__name__)
     app.secret_key = 'aitrac-secret-2025'
+    CORS(app, resources={r"/api/*": {"origins": "*"}, r"/ml/*": {"origins": "*"}})
 
     app.register_blueprint(main_bp)
     app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
