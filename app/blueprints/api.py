@@ -95,8 +95,26 @@ def ml_detection():
         info.setdefault('bbox', {'x':0,'y':0,'w':0,'h':0})
         return jsonify(info)
     except Exception as e:
-        # fallback to dummy if engine not available
-        return jsonify({'label':'--','confidence':0,'quality_score':0,'total_detections':0,'avg_quality':0,'bbox':{'x':0,'y':0,'w':0,'h':0}})
+        # fallback demo data for serverless deployments without camera/model access
+        labels = ['Tanah Optimal', 'Tanah Kering', 'Tanah Basah', 'Bebatuan']
+        label = random.choices(labels, weights=[0.45, 0.25, 0.20, 0.10])[0]
+        confidence = round(random.uniform(0.72, 0.96), 3)
+        quality = round(random.uniform(68, 94), 1)
+        return jsonify({
+            'label': label,
+            'confidence': confidence,
+            'quality_score': quality,
+            'total_detections': random.randint(1, 6),
+            'avg_quality': quality,
+            'bbox': {
+                'x': random.randint(80, 320),
+                'y': random.randint(50, 220),
+                'w': random.randint(120, 220),
+                'h': random.randint(90, 180)
+            },
+            'demo': True,
+            'detail': str(e)
+        })
 
 @api_bp.route('/maintenance/health')
 def maintenance_health():
