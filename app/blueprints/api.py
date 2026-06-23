@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify
 import random
 import math
+import os
 import time
 
 api_bp = Blueprint('api', __name__)
@@ -81,6 +82,8 @@ def notifications():
 def ml_detection():
     # return the latest inference info stored by ml_engine
     try:
+        if os.getenv('VERCEL'):
+            raise RuntimeError('ML camera engine is disabled on Vercel serverless')
         from .. import ml_engine
         _, info = ml_engine.get_current()
         # ensure numeric values are serializable

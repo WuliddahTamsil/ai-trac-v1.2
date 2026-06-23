@@ -16,6 +16,24 @@ python run.py
 
 Buka browser: **http://localhost:5000**
 
+## Deploy ke Vercel
+
+Project ini sudah menyediakan entry point serverless di `api/index.py` dan
+konfigurasi `vercel.json`. Saat membuat project di Vercel, pastikan **Root
+Directory** mengarah ke folder `ai-trac`.
+
+Vercel akan menjalankan Flask sebagai serverless function, bukan lewat
+`python run.py`, jadi `run.py` tetap dipakai untuk lokal saja.
+
+Fitur kamera/YOLO tidak dijalankan di Vercel karena serverless tidak punya
+akses webcam dan tidak cocok untuk background capture loop. Untuk menjalankan
+fitur ML secara lokal:
+
+```bash
+pip install -r requirements-ml.txt
+python run.py
+```
+
 ## Struktur Project
 
 ```

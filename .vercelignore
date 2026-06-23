@@ -1,0 +1,6 @@
+.venv
+__pycache__
+*.pyc
+tools
+app/yolo_ml
+requirements-ml.txt
